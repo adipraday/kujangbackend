@@ -133,6 +133,7 @@ export const addWorkOrder = async (req, res) => {
     label_fat,
   } = req.body;
   const status = "Waiting List";
+
   try {
     await WorkOrders.create({
       no_wo: no_wo,
@@ -148,17 +149,43 @@ export const addWorkOrder = async (req, res) => {
       label_fat: label_fat,
       status: status,
     });
-    await Fat.create({
-      fat_label: 0,
-      fat_id: label_fat,
-      fat_area: 0,
-      fat_input: 0,
-      fat_output_capacity: 0,
-      fat_output_used: 0,
-      fat_output_available: 0,
+
+    const fat_check = await Fat.findOne({
+      where: {
+        fat_id: label_fat,
+      },
     });
+
+    if (!fat_check) {
+      // If fat_check is null, create a new record
+      await Fat.create({
+        fat_label: 0,
+        fat_id: label_fat,
+        fat_area: 0,
+        fat_input: 0,
+        fat_output_capacity: 0,
+        fat_output_used: 1,
+        fat_output_available: -1, // Assuming initial capacity is 1
+      });
+    } else {
+      // Update existing record
+      const update_output_used = fat_check.fat_output_used + 1;
+      const update_output_available = fat_check.fat_output_available - 1;
+      await Fat.update(
+        {
+          fat_output_used: update_output_used,
+          fat_output_available: update_output_available,
+        },
+        {
+          where: {
+            fat_id: label_fat,
+          },
+        }
+      );
+    }
+
     const text =
-      "Telah diterbitkan WorkOrder (" +
+      "Telah diterbitkan WorkOrder pemasangan (" +
       no_wo +
       ") atas nama: " +
       nama_client +
@@ -172,6 +199,7 @@ export const addWorkOrder = async (req, res) => {
       paket_berlangganan +
       ", FAT input: " +
       label_fat;
+
     await ActivityLog.create({
       user_id: user_id,
       act_id: 0,
@@ -336,6 +364,9 @@ export const updateProgressWo = async (req, res) => {
         where: {
           another_act_id: id,
           act_sub: "Teknisi Ditambahkan",
+          act_desk: {
+            [Op.like]: `%WorkOrder%`,
+          },
         },
       });
       // Extract the distinct act_ids
@@ -527,6 +558,9 @@ export const getTeknisiWo = async (req, res) => {
       where: {
         another_act_id: id,
         status: "Busy",
+        act_desk: {
+          [Op.like]: `%WorkOrder%`,
+        },
       },
       order: [["id", "DESC"]],
     });
@@ -578,6 +612,9 @@ export const deleteTeknisiWo = async (req, res) => {
         where: {
           act_id: teknisiId,
           another_act_id: id,
+          act_desk: {
+            [Op.like]: `%WorkOrder%`,
+          },
         },
       }
     );
@@ -642,6 +679,9 @@ export const deleteWorkOrderById = async (req, res) => {
     const teknisiId = await ActivityLog.findAll({
       where: {
         act_id: id,
+        act_desk: {
+          [Op.like]: `%WorkOrder%`,
+        },
       },
     });
     await Users.update(

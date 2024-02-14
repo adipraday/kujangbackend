@@ -27,6 +27,31 @@ export const getUsers = async (req, res) => {
   }
 };
 
+export const getUserInfoById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await Users.findAll({
+      attributes: [
+        "id",
+        "username",
+        "name",
+        "jobdesk",
+        "aktif_sejak",
+        "whatsapp",
+        "telp",
+        "email",
+        "status",
+      ],
+      where: {
+        id: id,
+      },
+    });
+    res.json(user);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const Register = async (req, res) => {
   const {
     username,
@@ -41,10 +66,14 @@ export const Register = async (req, res) => {
   } = req.body;
 
   if (password !== confPassword) {
-    return res
-      .status(400)
-      .json({ msg: "Password dan Confirm Password tidak cocok" });
+    return res.json({ msg: "Password dan Confirm Password tidak cocok" });
   }
+
+  if (!req.file) {
+    return res.json({ msg: "Image harus di upload" });
+  }
+
+  const image = req.file.path;
 
   try {
     const userCredential = await createUserWithEmailAndPassword(
@@ -52,9 +81,10 @@ export const Register = async (req, res) => {
       email,
       password
     );
-    // Signed up
-    const user = userCredential;
-    console.log(user);
+
+    // // Signed up
+    // const user = userCredential;
+    // console.log(user);
 
     await Users.create({
       username: username,
@@ -64,6 +94,7 @@ export const Register = async (req, res) => {
       whatsapp: whatsapp,
       telp: telp,
       email: email,
+      profile_picture: image,
       status: "Available",
       password: null,
     });
@@ -79,23 +110,38 @@ export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    await signInWithEmailAndPassword(auth, email, password);
+    // Sign in the user
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
 
-    // Use a different variable name (e.g., userEmail) to avoid shadowing
-    const user = await Users.findAll({
+    // Look up the user by email
+    const userDetails = await Users.findAll({
       where: {
         email: email,
       },
     });
 
-    const userId = user[0].id;
-    const name = user[0].name;
+    if (!userDetails || userDetails.length === 0) {
+      // User not found, return appropriate response
+      return res.status(404).json({ msg: "User not found" });
+    }
 
+    const { id: userId, name, status } = userDetails[0];
+
+    if (status === "Not Active") {
+      return res.status(403).json({ msg: "Your access has been disabled" });
+    }
+
+    // Generate tokens
     const accessToken = jwt.sign(
       { userId, name, email },
       process.env.ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "20s",
+        expiresIn: "15m", // Adjust expiry time as needed
       }
     );
     const refreshToken = jwt.sign(
@@ -105,6 +151,8 @@ export const Login = async (req, res) => {
         expiresIn: "1d",
       }
     );
+
+    // Update refresh token in the database
     await Users.update(
       { refresh_token: refreshToken },
       {
@@ -113,14 +161,18 @@ export const Login = async (req, res) => {
         },
       }
     );
+
+    // Set refresh token in the cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day expiry
     });
 
+    // Return refresh token to the client
     res.json({ refreshToken });
   } catch (error) {
-    res.status(404).json({ msg: "Email tidak ditemukan" });
+    console.error("Login error:", error);
+    res.status(500).json({ msg: "An error occurred" });
   }
 };
 
@@ -165,7 +217,8 @@ export const Logout = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-  const { id, username, name, email } = req.body;
+  const { id, username, name, jobdesk, aktif_sejak, whatsapp, telp, status } =
+    req.body;
   if (!id) return res.sendStatus(204);
   const user = await Users.findAll({
     where: {
@@ -174,7 +227,15 @@ export const updateUser = async (req, res) => {
   });
   if (!user[0]) return res.sendStatus(204);
   await Users.update(
-    { username: username, name: name, email: email },
+    {
+      username: username,
+      name: name,
+      jobdesk: jobdesk,
+      aktif_sejak: aktif_sejak,
+      whatsapp: whatsapp,
+      telp: telp,
+      status: status,
+    },
     {
       where: {
         id: req.body.id,
@@ -182,6 +243,29 @@ export const updateUser = async (req, res) => {
     }
   );
   return res.sendStatus(200);
+};
+
+export const updateProfilePict = async (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.sendStatus(204);
+  const user = await Users.findAll({
+    where: {
+      id: id,
+    },
+  });
+  if (!user[0]) return res.sendStatus(204);
+  const image = req.file.path;
+  await Users.update(
+    {
+      profile_picture: image,
+    },
+    {
+      where: {
+        id: req.body.id,
+      },
+    }
+  );
+  return res.json({ msg: "Profile picture updated" });
 };
 
 export const getAvailableTechnician = async (req, res) => {

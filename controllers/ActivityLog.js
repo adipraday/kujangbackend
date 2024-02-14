@@ -13,6 +13,12 @@ export const dashboardAct = async (req, res) => {
             "Progress WorkOrder Diperbaharui",
             "Data WorkOrder Diperbaharui",
             "WorkOrder Diterbitkan",
+            "WO Dismantle Diterbitkan",
+            "WO Dismantle Updated",
+            "Progress WO Dismantle Diperbaharui",
+            "WO Maintenance Diterbitkan",
+            "WO Maintenance Updated",
+            "Progress WO Maintenance Diperbaharui",
           ],
         },
       },
@@ -23,5 +29,23 @@ export const dashboardAct = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ msg: "Data activity gagal ditampilkan" });
+  }
+};
+
+export const getTimeLine = async (req, res) => {
+  const kd_act = req.body.kd_act;
+  try {
+    const timelinewo = await ActivityLog.findAll({
+      where: {
+        act_desk: {
+          [Op.like]: `%${kd_act}%`,
+        },
+      },
+      order: [["id", "ASC"]],
+    });
+    res.json(timelinewo);
+  } catch (error) {
+    console.log(error);
+    res.json({ msg: "Timeline gagal ditampilkan" });
   }
 };
