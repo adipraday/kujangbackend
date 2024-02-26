@@ -11,6 +11,9 @@ export const getAbsensi = async (req, res) => {
         "tgl_absensi",
         "keterangan",
         "note",
+        "doc",
+        "createdAt",
+        "updatedAt",
       ],
       order: [["id", "DESC"]],
       limit: 100,
@@ -30,6 +33,10 @@ export const AddAbsensi = async (req, res) => {
   });
   if (!user[0]) return res.sendStatus(204);
   const nama = user[0].name;
+  if (!req.file) {
+    return res.json({ msg: "Image harus di upload" });
+  }
+  const image = req.file.path;
   try {
     await Absensi.create({
       id_user: id_user,
@@ -37,6 +44,7 @@ export const AddAbsensi = async (req, res) => {
       tgl_absensi: tgl_absensi,
       keterangan: keterangan,
       note: note,
+      doc: image,
     });
     res.json({ msg: "Absebsi Berhasil Ditambahkan" });
   } catch (error) {
@@ -62,6 +70,9 @@ export const getAbsensiById = async (req, res) => {
         "tgl_absensi",
         "keterangan",
         "note",
+        "doc",
+        "createdAt",
+        "updatedAt",
       ],
       where: {
         id_user: req.params.userId,

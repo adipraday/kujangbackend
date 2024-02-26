@@ -212,7 +212,11 @@ export const addWorkOrder = async (req, res) => {
     //////////////////////////
     //Sending WhatsApp Notif//
     //////////////////////////
-    const teamDatas = await Users.findAll();
+    const teamDatas = await Users.findAll({
+      where: {
+        member_of: user_id,
+      },
+    });
     // Extract the distinct act_ids
     const distinctPhoneNumbers = [
       ...new Set(teamDatas.map((teamdata) => teamdata.whatsapp)),
@@ -313,7 +317,11 @@ export const updateWorkOrder = async (req, res) => {
     //////////////////////////
     //Sending WhatsApp Notif//
     //////////////////////////
-    const teamDatas = await Users.findAll();
+    const teamDatas = await Users.findAll({
+      where: {
+        member_of: userId,
+      },
+    });
     // Extract the distinct act_ids
     const distinctPhoneNumbers = [
       ...new Set(teamDatas.map((teamdata) => teamdata.whatsapp)),
@@ -423,7 +431,15 @@ export const updateProgressWo = async (req, res) => {
     //////////////////////////
     //Sending WhatsApp Notif//
     //////////////////////////
-    const teamDatas = await Users.findAll();
+    const cek_member_number = await Users.findOne({
+      where: { id: userId },
+    });
+    const member_number = cek_member_number.member_of;
+    const teamDatas = await Users.findAll({
+      where: {
+        member_of: member_number,
+      },
+    });
     // Extract the distinct act_ids
     const distinctPhoneNumbers = [
       ...new Set(teamDatas.map((teamdata) => teamdata.whatsapp)),
@@ -509,7 +525,11 @@ export const addTeknisiWo = async (req, res) => {
     //////////////////////////
     //Sending WhatsApp Notif//
     //////////////////////////
-    const teamDatas = await Users.findAll();
+    const teamDatas = await Users.findAll({
+      where: {
+        member_of: userId,
+      },
+    });
     // Extract the distinct act_ids
     const distinctPhoneNumbers = [
       ...new Set(teamDatas.map((teamdata) => teamdata.whatsapp)),
@@ -633,7 +653,15 @@ export const deleteTeknisiWo = async (req, res) => {
     //////////////////////////
     //Sending WhatsApp Notif//
     //////////////////////////
-    const teamDatas = await Users.findAll();
+    const cek_member_number = await Users.findOne({
+      where: { id: teknisiId },
+    });
+    const member_number = cek_member_number.member_of;
+    const teamDatas = await Users.findAll({
+      where: {
+        member_of: member_number,
+      },
+    });
     // Extract the distinct act_ids
     const distinctPhoneNumbers = [
       ...new Set(teamDatas.map((teamdata) => teamdata.whatsapp)),

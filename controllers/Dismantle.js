@@ -523,7 +523,6 @@ export const reportDismantle = async (req, res) => {
     teknisi_note,
     perangkat_note,
   } = req.body;
-  const image = req.file.path;
   try {
     if (
       status === "Done" ||
@@ -579,7 +578,7 @@ export const reportDismantle = async (req, res) => {
         status: status,
         teknisi_note: teknisi_note,
         perangkat_note: perangkat_note,
-        image_doc_perangkat: image,
+        image_doc_perangkat: null,
       },
       {
         where: { id: id },

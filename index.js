@@ -12,6 +12,7 @@ import WorkOrders from "./models/WOModels.js";
 import ActivityLog from "./models/ActivityLogModels.js";
 import Fat from "./models/FatModels.js";
 import Dismantle from "./models/DismantleModels.js";
+import Doc from "./models/DocModels.js";
 import Bts from "./models/BtsModels.js";
 import Maintenance from "./models/MaintenanceModels.js";
 
@@ -51,6 +52,7 @@ try {
   await ActivityLog.sync();
   await Fat.sync();
   await Dismantle.sync();
+  await Doc.sync();
   await Bts.sync();
   await Maintenance.sync();
 } catch (error) {

@@ -1,10 +1,12 @@
 import Users from "../models/UserModel.js";
 import jwt from "jsonwebtoken";
 import { auth } from "../firebase.js";
+import { Op } from "sequelize";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import ActivityLog from "../models/ActivityLogModels.js";
 
 export const getUsers = async (req, res) => {
   try {
@@ -14,6 +16,7 @@ export const getUsers = async (req, res) => {
         "username",
         "name",
         "jobdesk",
+        "member_of",
         "aktif_sejak",
         "whatsapp",
         "telp",
@@ -36,6 +39,7 @@ export const getUserInfoById = async (req, res) => {
         "username",
         "name",
         "jobdesk",
+        "member_of",
         "aktif_sejak",
         "whatsapp",
         "telp",
@@ -52,11 +56,41 @@ export const getUserInfoById = async (req, res) => {
   }
 };
 
+export const getWorkingStatus = async (req, res) => {
+  if (req.method !== "PUT") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  const { id_user, no_wo } = req.body;
+
+  try {
+    const response = await ActivityLog.findAll({
+      where: {
+        act_id: id_user,
+        act_sub: "Teknisi Ditambahkan",
+        act_desk: {
+          [Op.like]: `%${no_wo}%`,
+        },
+      },
+    });
+
+    if (!response[0]) {
+      return res.json({ msg: "Unregistered" });
+    } else {
+      return res.json({ msg: "Registered" });
+    }
+  } catch (error) {
+    console.error("Error occurred while retrieving working status:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const Register = async (req, res) => {
   const {
     username,
     name,
     jobdesk,
+    memberOf,
     aktifSejak,
     whatsapp,
     telp,
@@ -90,6 +124,7 @@ export const Register = async (req, res) => {
       username: username,
       name: name,
       jobdesk: jobdesk,
+      member_of: memberOf,
       aktif_sejak: aktifSejak,
       whatsapp: whatsapp,
       telp: telp,
@@ -110,16 +145,15 @@ export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Sign in the user
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
+    try {
+      // Sign in the user
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      res.json({ msg: "Data access tidak valid" });
+    }
 
     // Look up the user by email
-    const userDetails = await Users.findAll({
+    const userDetails = await Users.findOne({
       where: {
         email: email,
       },
@@ -130,7 +164,7 @@ export const Login = async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    const { id: userId, name, status } = userDetails[0];
+    const { id: userId, name, status } = userDetails;
 
     if (status === "Not Active") {
       return res.status(403).json({ msg: "Your access has been disabled" });
@@ -217,8 +251,17 @@ export const Logout = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-  const { id, username, name, jobdesk, aktif_sejak, whatsapp, telp, status } =
-    req.body;
+  const {
+    id,
+    username,
+    name,
+    jobdesk,
+    member_of,
+    aktif_sejak,
+    whatsapp,
+    telp,
+    status,
+  } = req.body;
   if (!id) return res.sendStatus(204);
   const user = await Users.findAll({
     where: {
@@ -231,6 +274,7 @@ export const updateUser = async (req, res) => {
       username: username,
       name: name,
       jobdesk: jobdesk,
+      member_of: member_of,
       aktif_sejak: aktif_sejak,
       whatsapp: whatsapp,
       telp: telp,
@@ -278,6 +322,20 @@ export const getAvailableTechnician = async (req, res) => {
       attributes: ["id", "name", "jobdesk", "status"],
     });
     res.json(availabletechnician);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getTechnicianLeader = async (req, res) => {
+  try {
+    const technicianleader = await Users.findAll({
+      where: {
+        jobdesk: "Lead Network Enginer",
+      },
+      attributes: ["id", "name", "jobdesk", "status"],
+    });
+    res.json(technicianleader);
   } catch (error) {
     console.log(error);
   }

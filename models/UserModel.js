@@ -15,6 +15,9 @@ const Users = db.define(
     jobdesk: {
       type: DataTypes.STRING,
     },
+    member_of: {
+      type: DataTypes.INTEGER,
+    },
     aktif_sejak: {
       type: DataTypes.DATE,
     },

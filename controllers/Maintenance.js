@@ -24,7 +24,6 @@ export const getMaintenance = async (req, res) => {
         "status",
         "first_note",
         "last_note",
-        "image_doc_perangkat",
         "createdAt",
         "updatedAt",
       ],
@@ -57,7 +56,6 @@ export const getMaintenanceById = async (req, res) => {
         "status",
         "first_note",
         "last_note",
-        "image_doc_perangkat",
         "createdAt",
         "updatedAt",
       ],
@@ -91,7 +89,6 @@ export const getMaintenanceActive = async (req, res) => {
         "status",
         "first_note",
         "last_note",
-        "image_doc_perangkat",
         "createdAt",
         "updatedAt",
       ],
@@ -129,7 +126,6 @@ export const getMaintenanceHistory = async (req, res) => {
         "status",
         "first_note",
         "last_note",
-        "image_doc_perangkat",
         "createdAt",
         "updatedAt",
       ],
@@ -553,7 +549,6 @@ export const getTeknisiWoMaintenance = async (req, res) => {
 export const reportMaintenance = async (req, res) => {
   const { user_id, id, no_wo, nama_client, id_pelanggan, status, last_note } =
     req.body;
-  const image = req.file.path;
   try {
     if (
       status === "Done" ||
@@ -606,7 +601,7 @@ export const reportMaintenance = async (req, res) => {
       {
         status: status,
         last_note: last_note,
-        image_doc_perangkat: image,
+        image_doc_perangkat: null,
       },
       {
         where: { id: id },

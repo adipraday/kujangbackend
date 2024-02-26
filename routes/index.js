@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getUsers,
+  getWorkingStatus,
   getUserInfoById,
   Login,
   Register,
@@ -8,6 +9,7 @@ import {
   updateUser,
   updateProfilePict,
   getAvailableTechnician,
+  getTechnicianLeader,
 } from "../controllers/Users.js";
 import {
   getAbsensi,
@@ -68,12 +70,20 @@ import {
   reportMaintenance,
   deleteMaintenanceById,
 } from "../controllers/Maintenance.js";
+import {
+  uploadDoc,
+  getDocs,
+  getDocsById,
+  getDocsBySubjectId,
+  deleteDocById,
+} from "../controllers/Doc.js";
 import { refreshToken } from "../controllers/RefreshToken.js";
 import { dashboardAct, getTimeLine } from "../controllers/ActivityLog.js";
 
 const router = express.Router();
 
 router.get("/users", getUsers);
+router.put("/workingstatus", getWorkingStatus);
 router.get("/getuserinfo/:id", getUserInfoById);
 router.post("/register", Register);
 router.post("/login", Login);
@@ -82,6 +92,7 @@ router.delete("/logout", Logout);
 router.put("/updateuser", updateUser);
 router.put("/updateprofilepict", updateProfilePict);
 router.get("/getavailabletechnician", getAvailableTechnician);
+router.get("/gettechnicianleader", getTechnicianLeader);
 /////////////////////////////////////////////
 router.get("/absensi", getAbsensi);
 router.post("/addabsensi", AddAbsensi);
@@ -138,6 +149,12 @@ router.get("/getbts/:id", getBtsById);
 router.post("/addbts", addBts);
 router.patch("/updatebts/:id", updateBts);
 router.delete("/deletebts/:id", deleteBtsById);
+/////////////////////////////////////////////
+router.post("/uploaddoc", uploadDoc);
+router.get("/getdocs", getDocs);
+router.get("/getdoc/:id", getDocsById);
+router.get("/getdocbysubject/:id/:subject", getDocsBySubjectId);
+router.delete("/deletedoc/:id", deleteDocById);
 /////////////////////////////////////////////
 
 export default router;
