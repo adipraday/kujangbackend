@@ -152,15 +152,15 @@ export const addWorkOrder = async (req, res) => {
 
     const fat_check = await Fat.findOne({
       where: {
-        fat_id: label_fat,
+        fat_label: label_fat,
       },
     });
 
     if (!fat_check) {
       // If fat_check is null, create a new record
       await Fat.create({
-        fat_label: 0,
-        fat_id: label_fat,
+        fat_label: label_fat,
+        fat_id: 0,
         fat_area: 0,
         fat_input: 0,
         fat_output_capacity: 0,
@@ -178,7 +178,7 @@ export const addWorkOrder = async (req, res) => {
         },
         {
           where: {
-            fat_id: label_fat,
+            fat_label: label_fat,
           },
         }
       );
